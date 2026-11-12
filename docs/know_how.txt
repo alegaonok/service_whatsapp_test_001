@@ -1,0 +1,30 @@
+uv run flask --app whatsapp_service_002.app run --debug
+corre app.py sin escribir en codigo :
+if __name__ = "__main__":
+    app.run(debug=True)
+
+manejar errores con json
+@app.errorhadler(404)
+
+para errores de python no de flask
+sender = data.get("from", "Desconocido")
+
+validar datos del json
+
+valida si campo viene en el cuerpo
+    if not data or "message" not in data:
+        return {
+            "error": "El campo 'message' es obligatorio"
+        }, 400
+
+valida determinado tipo
+    if not isinstance(data["message"], str):
+        return {
+            "error": "El campo 'message' debe ser un texto"
+        }, 400
+
+valida contenido
+    if not data["message"].strip():
+        return {
+            "error": "El campo 'message' no puede estar vacio"
+        }, 400
