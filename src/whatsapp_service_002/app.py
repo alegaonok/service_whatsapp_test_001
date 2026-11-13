@@ -1,4 +1,21 @@
+import os
+from dotenv import load_dotenv
 from flask import Flask, request
+import requests
+
+load_dotenv()
+
+WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
+PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
+WHATSAPP_RECIPIENT = os.getenv("WHATSAPP_RECIPIENT")
+GRAPH_API_VERSION = "v27.0"
+WEBHOOK_VERIFY_TOKEN = os.getenv("WEBHOOK_VERIFY_TOKEN")
+
+GRAPH_API_URL = (
+    f"https://graph.facebook.com/"
+    f"{GRAPH_API_VERSION}/"
+    f"{PHONE_NUMBER_ID}/messages"
+)
 
 app = Flask(__name__)
 
@@ -63,9 +80,46 @@ def webhook():
     print(f"El value dict es: {value_dict}")
     print(type(value_dict))
 
-    messages = value_dict["messages"]
-    print(f"Contenido de messages es : {messages}")
-    print(type(messages))
+    event_found = False
+
+    if "statuses" in value_dict:
+        print("statuses presente")
+        event_found = True
+
+    if "messages" in value_dict:
+        messages = value_dict["messages"]
+        print("messages presente")
+        event_found = True
+
+        for message_item in messages:
+            sender = message_item["from"]
+            # validar si el mensaje es una foto, audio, text, etc
+            message_type = message_item["type"]
+
+            if message_type == "text":
+
+                text = message_item["text"]
+                body = text["body"]
+
+                print(f"""
+                    Remitente: {sender},
+                    Mensaje: {body}
+                """)
+
+            else:
+                print("Tipo de mensaje no soportado", message_type)
+
+        
+        if not event_found:
+            print("Evento no encontrado")
+
+        return {
+            "message": "Datos Recibidos.",
+            "data": data
+        }, 200
+    
+    # print(f"Contenido de messages es : {messages}")
+    # print(type(messages))
 
     """
     messages_item = messages[0]
@@ -79,28 +133,48 @@ def webhook():
         texto es: {texto["body"]}
     )
     """
-    for message_item in messages:
-        sender = message_item["from"]
-        # validar si el mensaje es una foto, audio, text, etc
-        message_type = message_item["type"]
 
-        if message_type == "text":
 
-            text = message_item["text"]
-            body = text["body"]
+@app.route("/webhook", methods=["GET"])
+def verify_webhook():
+    mode = request.args.get("hub.mode")
+    token = request.args.get("hub.verify_token")
+    challenge = request.args.get("hub.challenge")
 
-            print(f"""
-                Remitente: {sender},
-                Mensaje: {body}
-            """)
+    if mode == "subscribe" and token == WEBHOOK_VERIFY_TOKEN:
+        return challenge, 200
 
-        else:
-            print("Tipo de mensaje no soportado", message_type)
+    return "Forbidden", 403
 
-    return {
-        "message": "Datos Recibidos.",
-        "data": data
-    }, 200
+
+def send_message():
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": WHATSAPP_RECIPIENT,
+        "type": "template",
+        "template": {
+            "name": "hello_world",
+            "language": {
+                "code": "en_US"
+            }
+        }
+    }
+    headers = {
+        "Authorization": f"Bearer {WHATSAPP_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(
+        GRAPH_API_URL,
+        headers=headers,
+        json=payload,
+        timeout=20
+    )
+
+    print("Status code:", response.status_code)
+    print("Respuesta de Meta:", response.json())
+
+    return response
 
 
 @app.errorhandler(404)

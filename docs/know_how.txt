@@ -28,3 +28,28 @@ valida contenido
         return {
             "error": "El campo 'message' no puede estar vacio"
         }, 400
+
+Vamos a conecctarnos a META
+
+uv add python-dotenv
+cargar variables de entorno 
+import os
+from dotenv import load_dotenv
+
+comprobar que las var de entor esten cargadas
+print("Token cargado:", bool(WHATSAPP_TOKEN))
+print("Phone Number ID cargado:", bool(PHONE_NUMBER_ID))
+
+
+contruir los headar del payload
+
+cloudflare es gratuito para protegernos de ataques
+
+https://charlie-bid-every-aaron.trycloudflare.com 
+https://costa-tiffany-del-integrating.trycloudflare.com
+https://costa-tiffany-del-integrating.trycloudflare.com/webhook
+https://doubt-struggle-tune-doc.trycloudflare.com/webhook
+https://strand-phoenix-ruling-specialty.trycloudflare.com/webhook
+
+configurar META
+registrar url publica de META

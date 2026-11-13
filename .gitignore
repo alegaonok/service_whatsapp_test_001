@@ -6,5 +6,12 @@ dist/
 wheels/
 *.egg-info
 
+
 # Virtual environments
 .venv
+
+# My notes
+docs/adr/datos_sensibles.txt
+
+# dotenv
+.env
