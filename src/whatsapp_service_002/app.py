@@ -59,16 +59,43 @@ def webhook():
     print(sender)
     print(type(sender))
     """
+    if "entry" not in data:
+        return {
+            "error": "Falta el campo 'entry'"
+        }, 400
+
     entry = data["entry"]
+
+    if not isinstance(entry, list):
+        return {
+            "error": "El campo 'entry' debe ser una lista"
+        }, 400
+
+    if not entry:
+        return {
+            "error": "El campo 'entry' no puede estar vacio"
+        }, 400
 
     print(entry)
     print(type(entry))
 
     entry_item = entry[0]
+
+    if not isinstance(entry_item, dict):
+        return {
+            "error": "El campo 'entry_item' no debe ser una lista"
+        }, 400
+    
     print(f"El entry_item: {entry_item}")
     print(type(entry_item))
 
+    if "changes" not in entry_item:
+        return {
+            "error": "Falta el campo 'changes'"
+        }, 400
+        
     changes = entry_item["changes"]
+    
     print(f"changes es: {changes}")
     print(type(changes))
 
@@ -83,7 +110,8 @@ def webhook():
     event_found = False
 
     if "statuses" in value_dict:
-        print("statuses presente")
+        statuses = value_dict["statuses"]
+        print("Evento de estado recibido:", len(statuses))
         event_found = True
 
     if "messages" in value_dict:
@@ -113,10 +141,10 @@ def webhook():
         if not event_found:
             print("Evento no encontrado")
 
-        return {
-            "message": "Datos Recibidos.",
-            "data": data
-        }, 200
+    return {
+        "message": "Datos Recibidos.",
+        "data": data
+    }, 200
     
     # print(f"Contenido de messages es : {messages}")
     # print(type(messages))
