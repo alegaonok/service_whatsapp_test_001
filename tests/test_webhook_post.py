@@ -181,3 +181,55 @@ def test_webhook_missing_changes():
     assert response.json == {
         "error": "Falta el campo 'changes'"
     }
+
+def test_webhook_changes_not_list():
+    client = app.test_client()
+
+    payload = {
+        "entry": [
+            {"changes": "esto deberia de ser una lista"}
+    ]
+}
+    response = client.post(
+        "/webhook",
+        json=payload
+    )
+    
+    assert response.status_code == 400
+
+def test_webhook_changes_empty():
+    client = app.test_client()
+
+    payload = {
+        "entry": [
+        {"changes": []}
+    ]
+}
+
+    response = client.post(
+        "/webhook",
+        json=payload
+)
+
+    assert response.status_code == 400
+
+def test_webhook_changes_is_dict():
+    client = app.test_client()
+  
+    payload = {
+        "entry": [
+            {
+                "changes": [
+                "esto deberia ser un objeto JSON"
+                ]
+            }
+        ]
+
+    }
+    
+    response = client.post(
+        "/webhook",
+        json=payload
+    )
+
+    assert response.status_code == 400

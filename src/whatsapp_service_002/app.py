@@ -95,6 +95,21 @@ def webhook():
         }, 400
         
     changes = entry_item["changes"]
+
+    if not isinstance(changes, list):
+        return {
+            "error": "El campo 'changes' es una lista"
+        }, 400
+
+    if not changes:
+        return {
+            "error": "El campo 'changes' no debe estar vacio"
+        }, 400
+
+    if not isinstance(changes[0], dict):
+        return {
+            "error": "El elemento de 'changes' debe ser un objeto JSON"
+        }, 400
     
     print(f"changes es: {changes}")
     print(type(changes))
