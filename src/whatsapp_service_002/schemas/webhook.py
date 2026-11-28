@@ -1,15 +1,18 @@
 from pydantic import BaseModel, Field
 
+class Text(BaseModel):
+    body: str
+
 class Status(BaseModel):
     id: str
     status: str
-    timestamp: str
-    recipient_id: str
+    timestamp: str | None = None
+    recipient_id: str | None = None
 
 class Message(BaseModel):
     value_from: str = Field(alias="from")
     type: str
-    text: dict
+    text: Text
 
 class Value(BaseModel):
     messages: list[Message] | None = None
@@ -20,9 +23,9 @@ class Changes(BaseModel):
     value: Value
 
 class Entry(BaseModel):
-    changes: list[Changes]
+    changes: list[Changes] = Field(min_length=1)
 
 class WebhookPayload(BaseModel):
     object: str
-    entry: list[Entry]
+    entry: list[Entry] = Field(min_length=1)
 

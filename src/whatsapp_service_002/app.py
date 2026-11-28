@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, request
 import requests
+from pydantic import ValidationError
+from whatsapp_service_002.schemas.webhook import WebhookPayload
 
 load_dotenv()
 
@@ -34,115 +36,51 @@ def webhook():
         return {
             "error": "El cuerpo de la peticion debe ser un objeto JSON"
         }, 400
-    """
-    if "message" not in data:
-        return {
-            "error": "El campo 'message' es obligatorio"
-        }, 400
-    if not isinstance(data["message"], str):
-        return {
-            "error": "El campo 'message' debe ser un texto"
-        }, 400
-    if not data["message"].strip():
-        return {
-            "error": "El campo 'message' no puede estar vacio"
-        }, 400
-
-    print(data)
-    print(type(data))
-
-    message = data["message"]
-    print(message)
-    print(type(message))
-
-    sender = data.get("from")
-    print(sender)
-    print(type(sender))
-    """
-    if "entry" not in data:
-        return {
-            "error": "Falta el campo 'entry'"
-        }, 400
-
-    entry = data["entry"]
-
-    if not isinstance(entry, list):
-        return {
-            "error": "El campo 'entry' debe ser una lista"
-        }, 400
-
-    if not entry:
-        return {
-            "error": "El campo 'entry' no puede estar vacio"
-        }, 400
-
-    print(entry)
-    print(type(entry))
-
-    entry_item = entry[0]
-
-    if not isinstance(entry_item, dict):
-        return {
-            "error": "El campo 'entry_item' no debe ser una lista"
-        }, 400
     
-    print(f"El entry_item: {entry_item}")
-    print(type(entry_item))
+    # Aca va mi Payload  
+    # Este es mi Payload
+    try: 
+        payload = WebhookPayload.model_validate(data)
 
-    if "changes" not in entry_item:
+    except ValidationError as error:
+        print(error.errors())
+        for item in error.errors():
+            print("TIPO:", item["type"])
+            print("UBICACIÓN:", item["loc"])
+            print("MENSAJE:", item["msg"])
+            print("-------------------")
+            print("UBICACIÓN COMPLETA:", item["loc"])
+            
         return {
-            "error": "Falta el campo 'changes'"
-        }, 400
-        
-    changes = entry_item["changes"]
-
-    if not isinstance(changes, list):
-        return {
-            "error": "El campo 'changes' es una lista"
+            "error": "Ele payload recibido no tiene una estructura valida",
+            "details": error.errors(include_input=False)
         }, 400
 
-    if not changes:
-        return {
-            "error": "El campo 'changes' no debe estar vacio"
-        }, 400
 
-    if not isinstance(changes[0], dict):
-        return {
-            "error": "El elemento de 'changes' debe ser un objeto JSON"
-        }, 400
-    
-    print(f"changes es: {changes}")
-    print(type(changes))
-
-    value = changes[0]
-    print(f"Values contiene: {value}")
-    print(type(value))
-
-    value_dict = value["value"]
-    print(f"El value dict es: {value_dict}")
-    print(type(value_dict))
+    entry = payload.entry
+    changes = entry[0].changes
+    change = changes[0]
+    value = change.value
 
     event_found = False
 
-    if "statuses" in value_dict:
-        statuses = value_dict["statuses"]
+
+    if value.statuses is not None:
+        statuses = value.statuses
         print("Evento de estado recibido:", len(statuses))
         event_found = True
 
-    if "messages" in value_dict:
-        messages = value_dict["messages"]
+    if value.messages is not None:
+        messages = value.messages
         print("messages presente")
         event_found = True
 
         for message_item in messages:
-            sender = message_item["from"]
-            # validar si el mensaje es una foto, audio, text, etc
-            message_type = message_item["type"]
+            sender = message_item.value_from
+            message_type = message_item.type
 
             if message_type == "text":
-
-                text = message_item["text"]
-                body = text["body"]
+                body = message_item.text.body
 
                 print(f"""
                     Remitente: {sender},
@@ -152,9 +90,6 @@ def webhook():
             else:
                 print("Tipo de mensaje no soportado", message_type)
 
-        
-        if not event_found:
-            print("Evento no encontrado")
 
     return {
         "message": "Datos Recibidos.",

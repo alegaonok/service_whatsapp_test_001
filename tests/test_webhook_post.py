@@ -167,9 +167,10 @@ def test_webhook_missing_changes():
     client = app.test_client()
 
     payload = {
+        "object": "whatsapp_bussines_account",
         "entry": [
             {}
-        ]
+        ]   
     }
 
     response = client.post(
@@ -178,14 +179,16 @@ def test_webhook_missing_changes():
     )
 
     assert response.status_code == 400
-    assert response.json == {
-        "error": "Falta el campo 'changes'"
-    }
+    assert response.json["details"][0]["type"] == "missing"
+    assert response.json["details"][0]["loc"] == ["entry", 0, "changes"]
+
+
 
 def test_webhook_changes_not_list():
     client = app.test_client()
 
     payload = {
+        "object": "whatsapp_business_account",
         "entry": [
             {"changes": "esto deberia de ser una lista"}
     ]
@@ -197,12 +200,16 @@ def test_webhook_changes_not_list():
     
     assert response.status_code == 400
 
+
 def test_webhook_changes_empty():
     client = app.test_client()
 
     payload = {
+        "object": "whatsapp_business_account",
         "entry": [
-        {"changes": []}
+            {
+            "changes": []
+            }
     ]
 }
 
@@ -212,11 +219,14 @@ def test_webhook_changes_empty():
 )
 
     assert response.status_code == 400
+    assert response.json["details"][0]["type"] == "too_short"
+    assert response.json["details"][0]["loc"] == ["entry", 0, "changes"]
 
 def test_webhook_changes_is_dict():
     client = app.test_client()
   
     payload = {
+        "object": "whatsapp_business_account",
         "entry": [
             {
                 "changes": [
@@ -233,3 +243,5 @@ def test_webhook_changes_is_dict():
     )
 
     assert response.status_code == 400
+    assert response.json["details"][0]["type"] == "model_type"
+    assert response.json["details"][0]["loc"] == ["entry", 0, "changes", 0]
